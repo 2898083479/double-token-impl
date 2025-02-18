@@ -5,18 +5,42 @@ import { getNewToken } from "./token";
 
 axios.defaults.baseURL = "https://intern-examine-backend-api.vercel.app/api";
 
+let isRefreshing = false;
+let promiseQueue: ((token: string) => void)[] = [];
+
+const process = (token: string) => {
+    promiseQueue.forEach(setToken => setToken(token));
+    promiseQueue = [];
+}
+
+const addToQueue = (setToken: (token: string) => void) => {
+    promiseQueue.push(setToken);
+}
+
 export const setupAxiosInterceptors = (router: AppRouterInstance) => {
     axios.interceptors.response.use(
         async (response) => {
             if (response.data.code === ResponseStatusCode.unauthorized) {
-                const { code, data } = await getNewToken();
-                if (code === ResponseStatusCode.success) {
-                    localStorage.setItem("accessToken", data.accessToken);
-                    response.config.headers['Authorization'] = `Bearer ${data.accessToken}`;
-                    return axios(response.config);
-                } else {
-                    router.push("/user/signin")
+                if (!isRefreshing) {
+                    isRefreshing = true;
+                    const { code, data } = await getNewToken();
+                    if (code === ResponseStatusCode.success) {
+                        localStorage.setItem("accessToken", data.accessToken);
+                        response.config.headers['Authorization'] = `Bearer ${data.accessToken}`;
+                        return axios(response.config);
+                    } else {
+                        router.push("/user/signin")
+                    }
+                    isRefreshing = false;
+                    process(data.accessToken);
                 }
+
+                return new Promise((resolve) => {
+                    addToQueue((token: string) => {
+                        response.config.headers['Authorization'] = `Bearer ${token}`;
+                        resolve(axios(response.config))
+                    })
+                })
             }
             return response;
         }

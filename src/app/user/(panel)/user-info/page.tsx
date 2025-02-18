@@ -31,13 +31,24 @@ export default function UserPanelPage() {
 
   return (
     <div>
-      <Button
-        type="submit"
-        onClick={onSubmit}
-        className="bg-[#0C7FDA] text-white hover:bg-[#0C7FDA]/80"
-      >
-        Get User Info
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          type="submit"
+          onClick={onSubmit}
+          className="bg-[#0C7FDA] text-white hover:bg-[#0C7FDA]/80"
+        >
+          Get User Info
+        </Button>
+        <Button
+          className="bg-[#17C964] text-white hover:bg-[#17C964]/80"
+          type="button"
+          onClick={() =>
+            router.push("/user/test")
+          }
+        >
+          Test
+        </Button>
+      </div>
       {data ? (
         <div>
           <p>Email: {data.email}</p>
