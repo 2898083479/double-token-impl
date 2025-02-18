@@ -5,9 +5,6 @@ export const enum ResponseStatusCode {
     error = "2000",
     illegalParams = "2001",
     unauthorized = "2002",
-    forbidden = "2003",
-    notFound = "2004",
-    methodNotAllowed = "2005",
-    requestTimeout = "2006",
-    systemError = "3000"
+    wrongPassword = "2003",
+    unregistered = "2004",
 }

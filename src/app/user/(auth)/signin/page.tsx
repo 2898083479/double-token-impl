@@ -30,26 +30,12 @@ export default function SignInPage() {
   const formSchema = z.object({
     email: z
       .string()
-      .min(1, { message: "Please enter email" }),
+      .min(1, { message: "Please enter email" })
+      .email({ message: "Invalid email" }),
     password: z
       .string()
-      .min(1, { message: "Please enter password" }),
-  }).refine((data) => {
-    if (data.password !== "12345678") {
-      return false
-    }
-    return true
-  }, {
-    message: "Wrong password",
-    path: ["password"]
-  }).refine((data) => {
-    if (data.email !== "test@gmail.com") {
-      return false
-    }
-    return true
-  }, {
-    message: "The account has not been registered yet",
-    path: ["email"]
+      .min(1, { message: "Please enter password" })
+      .min(8, { message: "Password must be at least 8 characters" })
   })
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -67,10 +53,11 @@ export default function SignInPage() {
       localStorage.setItem("refreshToken", data.token.refreshToken)
       router.push("/user/user-info")
     }
-    if (code === ResponseStatusCode.error) {
-      {
-        message: "login failed"
-      }
+    if (code === ResponseStatusCode.wrongPassword) {
+      form.setError("password", { message: "Wrong password" })
+    }
+    if (code === ResponseStatusCode.unregistered) {
+      form.setError("email", { message: "The account has not been registered yet" })
     }
   }
 
