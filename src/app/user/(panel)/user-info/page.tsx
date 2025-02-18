@@ -18,21 +18,24 @@ export default function UserPanelPage() {
   const [data, setData] = useState<IUserInfo | null>(null)
 
   async function onSubmit() {
-    const { code, message, data } = await getUserProfile(localStorage.getItem("accessToken") || "")
+    const { code, data } = await getUserProfile(localStorage.getItem("accessToken") || "")
     if (code === ResponseStatusCode.success) {
-      console.log('user access token', localStorage.getItem("accessToken"))
       setData(data)
       return
+    } else {
+      setupAxiosInterceptors(router)
+      setData(null)
+      return
     }
-    setupAxiosInterceptors(router)
-    setData(null)
-    console.log('user access token', localStorage.getItem("accessToken"))
-    return
   }
 
   return (
-    <>
-      <Button type="submit" onClick={onSubmit}>
+    <div>
+      <Button
+        type="submit"
+        onClick={onSubmit}
+        className="bg-[#0C7FDA] text-white hover:bg-[#0C7FDA]/80"
+      >
         Get User Profile
       </Button>
       {data ? (
@@ -44,6 +47,6 @@ export default function UserPanelPage() {
       ) : (
         <div>No response data</div>
       )}
-    </>
+    </div>
   )
 }

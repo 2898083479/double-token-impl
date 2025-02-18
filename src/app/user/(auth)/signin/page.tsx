@@ -9,7 +9,6 @@ import { EyeIcon, EyeOff, Loader } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useTokenStore } from "@/app/user/store"
 import {
   Card,
   CardContent,
@@ -26,7 +25,6 @@ import {
 import { signin } from "@/api/auth/signin"
 import { ResponseStatusCode } from "@/api/auth/types"
 export default function SignInPage() {
-  const { token, setToken, setRefreshToken } = useTokenStore()
   const [passwordVisible, setPasswordVisible] = useState(false)
   const router = useRouter()
   const formSchema = z.object({
@@ -63,7 +61,7 @@ export default function SignInPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const { code, message, data } = await signin(values)
+    const { code, data } = await signin(values)
     if (code === ResponseStatusCode.success) {
       localStorage.setItem("accessToken", data.token.accessToken)
       localStorage.setItem("refreshToken", data.token.refreshToken)

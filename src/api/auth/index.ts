@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { toast } from "sonner";
 import { ResponseStatusCode } from './types';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { getNewToken } from "./token";
@@ -9,32 +8,19 @@ axios.defaults.baseURL = "https://intern-examine-backend-api.vercel.app/api";
 export const setupAxiosInterceptors = (router: AppRouterInstance) => {
     axios.interceptors.response.use(
         async (response) => {
-            const { data } = response
-            const { code } = data
-            console.log('code', code)
-            if (code === ResponseStatusCode.unauthorized) {
-                // TODO: 調用refresh token 獲取最新 token
-                const {code, message, token} = await getNewToken(localStorage.getItem("refreshToken") || "")
-                if (code === ResponseStatusCode.unauthorized) {
-                    localStorage.setItem("accessToken", token)
-                    console.log('refresh token', localStorage.getItem("accessToken"))
+            if (response.data.code === ResponseStatusCode.unauthorized) {
+                const { code, data } = await getNewToken();
+                if (code === ResponseStatusCode.success) {
+                    localStorage.setItem("accessToken", data.accessToken);
+                    response.config.headers['Authorization'] = `Bearer ${data.accessToken}`;
+                    return axios(response.config);
+                } else {
+                    router.push("/user/signin")
                 }
             }
-            return response
-        },
-        (error) => {
-            toast.error(error.data?.message || "系统错误");
-            const response = {
-                status: 200,
-                data: {
-                    code: error.data?.code || ResponseStatusCode.error,
-                    message: error.data?.message || "System error",
-                    data: {}
-                }
-            }
-            return Promise.resolve(response);
+            return response;
         }
-    )
+    );
 }
 
 export interface IRequest {
@@ -61,7 +47,6 @@ export const postReq = async ({ path, data = {}, params = {}, headers = {}, toke
             ...token && {
                 'Authorization': `Bearer ${token}`
             },
-            'Content-Type': 'application/json',
             ...headers
         }
     });
