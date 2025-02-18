@@ -14,3 +14,4 @@ export const getNewToken = async (): Promise<IGetNewTokenResponse> => {
     })
     return response.data
 }
+
