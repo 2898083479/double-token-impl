@@ -36,7 +36,7 @@ export default function UserPanelPage() {
         onClick={onSubmit}
         className="bg-[#0C7FDA] text-white hover:bg-[#0C7FDA]/80"
       >
-        Get User Profile
+        Get User Info
       </Button>
       {data ? (
         <div>
