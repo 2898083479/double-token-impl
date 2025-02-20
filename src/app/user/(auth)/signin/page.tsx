@@ -30,7 +30,7 @@ export default function SignInPage() {
   const formSchema = z.object({
     email: z
       .string()
-      .min(1, { message: "Please enter email" })
+      .nonempty({ message: "Please enter email" })
       .email({ message: "Invalid email" }),
     password: z
       .string()

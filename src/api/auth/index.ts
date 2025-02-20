@@ -1,21 +1,18 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import { ResponseStatusCode } from './types';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { getNewToken } from "./token";
 
 axios.defaults.baseURL = "https://intern-examine-backend-api.vercel.app/api";
 
+interface QueueTask {
+    config: AxiosRequestConfig;
+    resolve: Function;
+}
+
 let isRefreshing = false;
-let promiseQueue: ((token: string) => void)[] = [];
+let tasks: QueueTask[] = [];
 
-const process = (token: string) => {
-    promiseQueue.forEach(setToken => setToken(token));
-    promiseQueue = [];
-}
-
-const addToQueue = (setToken: (token: string) => void) => {
-    promiseQueue.push(setToken);
-}
 
 export const setupAxiosInterceptors = (router: AppRouterInstance) => {
     axios.interceptors.response.use(
@@ -24,21 +21,28 @@ export const setupAxiosInterceptors = (router: AppRouterInstance) => {
                 if (!isRefreshing) {
                     isRefreshing = true;
                     const { code, data } = await getNewToken();
-                    if (code === ResponseStatusCode.success) {
-                        localStorage.setItem("accessToken", data.accessToken);
-                        response.config.headers['Authorization'] = `Bearer ${data.accessToken}`;
-                        return axios(response.config);
-                    } else {
-                        router.push("/user/signin")
+                    if (code !== ResponseStatusCode.success) {
+                        router.push("/user/signin");
+                        return response;
                     }
+
+                    tasks.forEach(task => {
+                        const config = task.config;
+                        config.headers!['Authorization'] = `Bearer ${data.accessToken}`;
+                        task.resolve(axios(config));
+                    })
+                    tasks = [];
                     isRefreshing = false;
-                    process(data.accessToken);
+
+                    localStorage.setItem("accessToken", data.accessToken);
+                    response.config.headers['Authorization'] = `Bearer ${data.accessToken}`;
+                    return axios(response.config);
                 }
 
                 return new Promise((resolve) => {
-                    addToQueue((token: string) => {
-                        response.config.headers['Authorization'] = `Bearer ${token}`;
-                        resolve(axios(response.config))
+                    tasks.push({
+                        config: response.config,
+                        resolve: resolve
                     })
                 })
             }
