@@ -2,10 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { getUserProfile } from "@/api/auth/user"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { ResponseStatusCode } from "@/api/auth/types"
 import { useRouter } from "next/navigation"
-import { setupAxiosInterceptors } from "@/api/auth"
 
 interface IUserInfo {
   email: string
@@ -13,11 +12,11 @@ interface IUserInfo {
   bio: string
 }
 
-export default function UserPanelPage() {
+export const UserPanelPage = () => {
   const router = useRouter()
   const [data, setData] = useState<IUserInfo | null>(null)
 
-  async function onSubmit() {
+  const onSubmit = async () => {
     const { code, data, message } = await getUserProfile(localStorage.getItem("accessToken") || "")
     console.log(message, data)
     if (code === ResponseStatusCode.success) {
@@ -64,3 +63,5 @@ export default function UserPanelPage() {
     </div>
   )
 }
+
+export default UserPanelPage;
