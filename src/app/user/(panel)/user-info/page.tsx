@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { getUserProfile } from "@/api/auth/user"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ResponseStatusCode } from "@/api/auth/types"
 import { useRouter } from "next/navigation"
 import { setupAxiosInterceptors } from "@/api/auth"
@@ -18,15 +18,18 @@ export default function UserPanelPage() {
   const [data, setData] = useState<IUserInfo | null>(null)
 
   async function onSubmit() {
-    const { code, data } = await getUserProfile(localStorage.getItem("accessToken") || "")
+    const { code, data, message } = await getUserProfile(localStorage.getItem("accessToken") || "")
+    console.log(message, data)
     if (code === ResponseStatusCode.success) {
       setData(data)
       return
-    } else {
-      setupAxiosInterceptors(router)
-      setData(null)
-      return
     }
+  }
+
+  const onClick = async () => {
+    onSubmit();
+    await new Promise(resolve => setTimeout(resolve, 80));
+    onSubmit();
   }
 
   return (
@@ -34,7 +37,7 @@ export default function UserPanelPage() {
       <div className="flex gap-2">
         <Button
           type="submit"
-          onClick={onSubmit}
+          onClick={onClick}
           className="bg-[#0C7FDA] text-white hover:bg-[#0C7FDA]/80"
         >
           Get User Info

@@ -1,6 +1,10 @@
+'use client'
+
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { useRouter } from "next/navigation";
+import { setupAxiosInterceptors } from "@/api/auth";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -13,16 +17,14 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const metadata: Metadata = {
-  title: "Examine",
-  description: "Examine",
-};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const router = useRouter()
+  setupAxiosInterceptors(router);
   return (
     <html lang="en">
       <body
